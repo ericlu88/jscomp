@@ -21,6 +21,7 @@ namespace js
 {
 
 Runtime * g_runtime = NULL;
+StackFrame * g_topFrame = NULL;
 
 InternalClass Memory::getInternalClass () const
 {
@@ -423,7 +424,7 @@ void NativeObject::setInternalProp (unsigned index, uintptr_t value)
 NativeObject::~NativeObject ()
 {
     if (this->nativeFinalizer)
-        (*this->nativeFinalizer)(this);
+        (*this->nativeFinalizer)(JS_GET_TOPFRAME(), this);
 }
 
 ForInIterator * IndexedObject::makeIterator (StackFrame * caller)
@@ -2550,6 +2551,12 @@ bool Runtime::mark (IMark * marker, unsigned markBit)
         if (!markMemory(marker, markBit, it.second))
             return false;
 #endif
+
+    // Mark the handles
+    for ( Handles::iterator it = this->handles.begin(); !it.atEnd(); ++it )
+        if (!markMemory(marker, markBit, *it))
+            return false;
+
     return
         markMemory(marker, markBit, env) &&
         markValue(marker, markBit, this->thrownObject);
