@@ -2,6 +2,11 @@
 // Licensed under the Apache License v2.0. See LICENSE in the project
 // root for complete license information.
 
+exports.fixProto = function fixPrototype (obj, value)
+{
+    Object.defineProperty(obj, "prototype", {value: value});
+};
+
 __asmh__({},'#include "uv.h"');
 __asmh__({},"#include <errno.h>");
 

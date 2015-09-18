@@ -77,7 +77,7 @@ function FSReqWrap ()
 
 // Save the prototype where it cannot be changed
 var fsReqWrap_prototype = $jsc.createNative(2);
-FSReqWrap.prototype = fsReqWrap_prototype;
+jsc.fixPrototype(FSReqWrap, fsReqWrap_prototype);
 
 exports.FSReqWrap = FSReqWrap;
 
@@ -92,6 +92,8 @@ exports.open = function open (path, flags, mode, req)
         req.syscall = syscall;
         req.path = path;
 
+        // FIXME: how do we make sure that req is not null? We need a way to prove that the object has been created by us
+        // FIXME: Something that cannot be faked from JavaScript
         res = __asm__({},["res"],[["path", path], ["flags", flags | 0], ["mode", mode | 0], ["req", req]], [],
             "uv_fs_t * req = (uv_fs_t *)((js::NativeObject *)%[req].raw.oval)->getInternalUnsafe(0);\n" +
             "%[res] = js::makeNumberValue(uv_fs_open(uv_default_loop(), req,\n" +
@@ -430,6 +432,8 @@ exports.writeString = function writeString (fd, data, position, encoding, req)
 {
     if (!(req && req.__proto__ === fsReqWrap_prototype))
         req = null;
+
+    //TODO: if encoding === 'utf8', we can write it directly
 
     var buf = new Buffer(String(data), encoding);
     return writeBuffer(fd, buf, 0, buf.length, position, req);
